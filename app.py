@@ -10,7 +10,12 @@ def rd_headers():
         "content-type": "application/json",
     }
 
+def ensure_token():
+    if not RD_CRM_TOKEN:
+        raise RuntimeError("RD_CRM_TOKEN não configurado")
+
 def check_rd_token():
+    ensure_token()
     url = f"{RD_CRM_BASE_URL}/token/check"
     params = {"token": RD_CRM_TOKEN}
     r = requests.get(url, headers=rd_headers(), params=params, timeout=30)
@@ -18,6 +23,7 @@ def check_rd_token():
     return r.json()
 
 def criar_negociacao(payload):
+    ensure_token()
     url = f"{RD_CRM_BASE_URL}/deals"
     params = {"token": RD_CRM_TOKEN}
     r = requests.post(url, headers=rd_headers(), params=params, json=payload, timeout=30)
