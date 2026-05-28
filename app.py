@@ -1,33 +1,25 @@
-from flask import Flask, request, jsonify
 import os
+import requests
 
-TARGET_PIPELINE = "Campanha A Grande Jogada"
-TARGET_STAGE = "Novo Lead"
+RD_CRM_TOKEN = os.environ.get("RD_CRM_TOKEN")
+RD_CRM_BASE_URL = "https://crm.rdstation.com/api/v1"
 
-app = Flask(__name__)
+def rd_headers():
+    return {
+        "accept": "application/json",
+        "content-type": "application/json",
+    }
 
-@app.get("/")
-def home():
-    return jsonify({"ok": True, "service": "rd-gamification"})
+def check_rd_token():
+    url = f"{RD_CRM_BASE_URL}/token/check"
+    params = {"token": RD_CRM_TOKEN}
+    r = requests.get(url, headers=rd_headers(), params=params, timeout=30)
+    r.raise_for_status()
+    return r.json()
 
-@app.post("/webhook")
-def webhook():
-    data = request.get_json(silent=True) or {}
-    pipeline = data.get("pipeline")
-    stage = data.get("stage")
-
-    matched = pipeline == TARGET_PIPELINE and stage == TARGET_STAGE
-    action = "create_task" if matched else "ignore"
-
-    return jsonify({
-        "received": True,
-        "matched": matched,
-        "action": action,
-        "target_pipeline": TARGET_PIPELINE,
-        "target_stage": TARGET_STAGE,
-        "data": data
-    })
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+def criar_negociacao(payload):
+    url = f"{RD_CRM_BASE_URL}/deals"
+    params = {"token": RD_CRM_TOKEN}
+    r = requests.post(url, headers=rd_headers(), params=params, json=payload, timeout=30)
+    r.raise_for_status()
+    return r.json()
