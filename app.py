@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import os
 
 TARGET_PIPELINE = "Campanha A Grande Jogada"
+TARGET_STAGE = "Novo Lead"
 
 app = Flask(__name__)
 
@@ -13,11 +14,15 @@ def home():
 def webhook():
     data = request.get_json(silent=True) or {}
     pipeline = data.get("pipeline")
-    matched = pipeline == TARGET_PIPELINE
+    stage = data.get("stage")
+    matched = pipeline == TARGET_PIPELINE and stage == TARGET_STAGE
+    action = "create_task" if matched else "ignore"
     return jsonify({
         "received": True,
         "matched": matched,
+        "action": action,
         "target_pipeline": TARGET_PIPELINE,
+        "target_stage": TARGET_STAGE,
         "data": data
     })
 
